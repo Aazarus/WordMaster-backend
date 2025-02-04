@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { generateWordList } from './generateWordList';
+import { allowedOrigins } from './allowedOrigins';
 
 // Load environment variables
 dotenv.config();
@@ -11,7 +12,7 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 // Configure CORS to allow requests only from trusted origins
-const allowedOrigins = ['https://wordmaster.sevnasoftware.com/', 'http://localhost:8100']; // Replace with your domains
+ // Replace with your domains
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -50,3 +51,5 @@ app.post('/generate-word-list', (req: Request, res: Response) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+export default app;
