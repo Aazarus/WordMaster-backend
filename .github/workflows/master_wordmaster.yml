@@ -23,6 +23,14 @@ jobs:
         with:
           node-version: '22.x'
 
+      - name: Create .env file with secrets
+        run: |
+          echo "LLM_PROVIDER=${{ secrets.LLM_PROVIDER }}" > .env
+          echo "GROK_API_KEY=${{ secrets.GROK_API_KEY }}" >> .env
+          echo "GROK_API_URL=https://api.x.ai/v1/chat/completions" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+        shell: bash
+
       - name: npm install, build, and test
         run: |
           npm install
