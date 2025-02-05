@@ -29,6 +29,8 @@ jobs:
           echo "GROK_API_KEY=${{ secrets.GROK_API_KEY }}" >> .env
           echo "GROK_API_URL=https://api.x.ai/v1/chat/completions" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
+          echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}" >> .env
         shell: bash
 
       - name: npm install, build, and test
