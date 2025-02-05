@@ -63,9 +63,8 @@ class GrokProvider implements LLMProvider {
   private getWordCount(difficulty: string): number {
     switch (difficulty.toLowerCase()) {
       case 'easy': return 10;
-      case 'medium': return 15;
       case 'hard': return 30;
-      default: return 10;
+      default: return 15;
     }
   }
 }
