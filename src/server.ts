@@ -1,3 +1,4 @@
+import 'tsconfig-paths/register';
 import express, { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
@@ -12,14 +13,13 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 // Configure CORS to allow requests only from trusted origins
- // Replace with your domains
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Blocked by CORS policy'));
+        callback(new Error('Blocked by CORS policy') as unknown as null);
       }
     },
   })
@@ -38,18 +38,29 @@ app.use(limiter);
 app.use(express.json());
 
 // POST endpoint to generate a word list
-app.post('/generate-word-list', (req: Request, res: Response) => {
-  const { topic, difficulty } = req.body;
+app.post('/generate-word-list', async (req: Request, res: Response): Promise<any> => {
+  const { topic, difficulty, llmProvider } = req.body;
 
-  // Call the mock word generator function (replace with LLM API if needed)
-  const words = generateWordList(topic, difficulty);
+  if (!topic && !difficulty) {
+    return res.status(400).json({ error: 'Invalid request. Please provide a topic or difficulty.' });
+  }
 
-  res.json({ words });
+  try {
+    const words = await generateWordList(topic, difficulty, llmProvider);
+    res.status(200).json({
+      topic: topic || 'random',
+      words,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'An unexpected error occurred.' });
+  }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+export default app; // Export only the app, not the listening server
 
-export default app;
+if (process.env.NODE_ENV !== 'test') {
+  // Only start the server if not running tests
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
