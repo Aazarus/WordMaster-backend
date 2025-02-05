@@ -1,13 +1,15 @@
 import 'tsconfig-paths/register';
+import dotenv from 'dotenv';
+// Load environment variables as soon as possible
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { generateWordList } from './generateWordList';
 import { allowedOrigins } from './allowedOrigins';
+import posthog from './analytics/posthogClient';
 
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -42,19 +44,46 @@ app.post('/generate-word-list', async (req: Request, res: Response): Promise<any
   const { topic, difficulty, llmProvider } = req.body;
 
   if (!topic && !difficulty) {
+    posthog.capture({
+      distinctId: 'anonymous',
+      event: 'generate-word-list-failed',
+      properties: {
+        reason: 'Invalid request. Missing topic or difficulty.',
+      },
+    });
     return res.status(400).json({ error: 'Invalid request. Please provide a topic or difficulty.' });
   }
 
   try {
     console.log('Generating word list with topic: ', topic, ' and difficulty: ', difficulty, " from IP address: ", req.ip);
-    const words = await generateWordList(topic, difficulty, llmProvider);
-    console.log('Generated word list: ', words);
+    const words = await generateWordList(topic, difficulty, llmProvider);    
+    
+    // Log successful word generation
+    posthog.capture({
+      distinctId: 'anonymous',
+      event: 'generate-word-list-success',
+      properties: {
+        topic: topic || 'random',
+        difficulty,
+        wordCount: words.length,
+      },
+    });
+
     res.status(200).json({
       topic: topic || 'random',
       words,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating word list:', error);
+    posthog.capture({
+      distinctId: 'anonymous',
+      event: 'generate-word-list-error',
+      properties: {
+        error: error.message,
+        topic,
+        difficulty,
+      },
+    });
     res.status(500).json({ error: 'An unexpected error occurred.' });
   }
 });
