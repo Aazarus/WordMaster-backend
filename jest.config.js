@@ -2,6 +2,10 @@
 module.exports = {
   preset: 'ts-jest',               // Use ts-jest preset for TypeScript
   testEnvironment: 'node',         // Set the test environment to Node.js
+  rootDir: '.',
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1'  // Map "@/" to "src"
+  },
   transform: {
     '^.+\\.tsx?$': 'ts-jest',      // Use ts-jest to transform TypeScript files
   },
