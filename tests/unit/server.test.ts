@@ -1,41 +1,51 @@
 import request from 'supertest';
-import app from '../../src/server'; // Ensure the server is properly exported
+import app from '../../src/server';
+import { WordGenerationService } from '../../src/services/wordGenerationService';
 
-describe('POST /generate-word-list', () => {
-  test('should return 10 words for easy difficulty', async () => {
+// Mock rate limiting to bypass during tests
+jest.mock('express-rate-limit', () => {
+  return () => (req: any, res: any, next: any) => next();
+});
+
+// Mock the WordGenerationService
+jest.mock('@/services/wordGenerationService');
+
+describe('POST /generate-word-list with LLM provider switching', () => {
+  let mockService: jest.Mocked<WordGenerationService>;
+
+  beforeEach(() => {
+    mockService = new WordGenerationService() as jest.Mocked<WordGenerationService>;
+    (WordGenerationService as jest.Mock).mockReturnValue(mockService);
+  });
+
+  test('should generate words using the default LLM provider', async () => {
+    mockService.generateWords.mockResolvedValue(['MOON', 'PLANET', 'ASTEROID']);
+
     const response = await request(app)
       .post('/generate-word-list')
       .send({ topic: 'space', difficulty: 'easy' })
       .expect(200);
 
-    expect(response.body.words).toHaveLength(10);
+    expect(response.body.words).toEqual(['MOON', 'PLANET', 'ASTEROID']);
   });
 
-  test('should return 15 words for medium difficulty', async () => {
+  test('should generate words using the provided LLM provider', async () => {
+    mockService.generateWords.mockResolvedValue(['WAVE', 'REEF', 'CORAL']);
+
     const response = await request(app)
       .post('/generate-word-list')
-      .send({ topic: 'space', difficulty: 'medium' })
+      .send({ topic: 'ocean', difficulty: 'medium', llmProvider: 'grok' })
       .expect(200);
 
-    expect(response.body.words).toHaveLength(15);
+    expect(response.body.words).toEqual(['WAVE', 'REEF', 'CORAL']);
   });
 
-  test('should return 30 words for hard difficulty', async () => {
+  test('should return 400 for missing request body', async () => {
     const response = await request(app)
       .post('/generate-word-list')
-      .send({ topic: 'space', difficulty: 'hard' })
-      .expect(200);
+      .send({})
+      .expect(400);
 
-    expect(response.body.words).toHaveLength(30);
-  });
-
-  test('should handle unknown topics by returning a default word list', async () => {
-    const response = await request(app)
-      .post('/generate-word-list')
-      .send({ topic: 'unknown_topic', difficulty: 'easy' })
-      .expect(200);
-
-    expect(response.body.words).toHaveLength(10);
+    expect(response.body.error).toBe('Invalid request. Please provide a topic or difficulty.');
   });
 });
-
