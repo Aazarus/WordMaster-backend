@@ -46,12 +46,15 @@ app.post('/generate-word-list', async (req: Request, res: Response): Promise<any
   }
 
   try {
+    console.log('Generating word list with topic: ', topic, ' and difficulty: ', difficulty, " from IP address: ", req.ip);
     const words = await generateWordList(topic, difficulty, llmProvider);
+    console.log('Generated word list: ', words);
     res.status(200).json({
       topic: topic || 'random',
       words,
     });
   } catch (error) {
+    console.error('Error generating word list:', error);
     res.status(500).json({ error: 'An unexpected error occurred.' });
   }
 });

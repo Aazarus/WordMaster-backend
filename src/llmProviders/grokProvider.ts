@@ -26,8 +26,12 @@ class GrokProvider implements LLMProvider {
   async generateWords(topic: string, difficulty: string): Promise<string[]> {
     try {
       const prompt = `Generate ${this.getWordCount(difficulty)} words related to ${topic} for a word search game. The result should contain only the words, separated by commas.`;
+      console.log('Requesting words from Grok:', prompt);
       const response = await this.makeGrokRequest(prompt);
-      return response.split(',').map(word => word.trim().toUpperCase());
+      const words = response.split(',').map(word => word.trim().toUpperCase());
+      console.log('Received words from Grok:', words);
+
+      return words;
     } catch (error) {
       console.error('Error generating words from Grok:', error);
       throw error;

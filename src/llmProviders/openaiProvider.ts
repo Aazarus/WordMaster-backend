@@ -29,7 +29,7 @@ export default class OpenAIProvider implements LLMProvider {
     const wordCount = difficulty === 'easy' ? 10 : difficulty === 'medium' ? 15 : 30;
 
     try {
-
+      console.log("Requesting words from OpenAI for topic:", topic);
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -44,6 +44,7 @@ export default class OpenAIProvider implements LLMProvider {
       const words = response.choices[0]?.message?.content
         ?.split(',')
         .map(word => word.trim().toUpperCase()) || [];
+      console.log("Received words from OpenAI:", words);
 
       return words.slice(0, wordCount);
     } catch (error) {
